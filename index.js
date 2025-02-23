@@ -3,20 +3,29 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import cors from "cors";
 import userRouter from "./routes/user.route.js";
+import { errorHandler } from "./middlewares/ErrorHandler.js";
+import connectToDB from "./DB/connectToDB.js";
 
 
 const app = express();
 dotenv.config();
 
-
+connectToDB(); 
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors());
+
+// change the origin while run in production
+app.use(cors({
+    origin: "*",
+    credentials:true
+}));
 
 app.use("/api/v1/userApi",userRouter)
 
 
+// Error handling middleware
+app.use(errorHandler)
+
 app.listen(process.env.PORT,()=>{
     console.log(`app is running on port : ${process.env.PORT}`);
-    
-})
+});

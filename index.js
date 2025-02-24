@@ -5,6 +5,7 @@ import cors from "cors";
 import userRouter from "./routes/user.route.js";
 import { errorHandler } from "./middlewares/ErrorHandler.js";
 import connectToDB from "./DB/connectToDB.js";
+import districtRouter from "./routes/district.route.js";
 
 
 const app = express();
@@ -20,7 +21,13 @@ app.use(cors({
     credentials:true
 }));
 
-app.use("/api/v1/userApi",userRouter)
+
+// user-api
+app.use("/api/v1/userApi",userRouter);
+
+
+// district-api
+app.use("/api/v1/districtApi",districtRouter);
 
 
 // Error handling middleware

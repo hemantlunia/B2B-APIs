@@ -160,10 +160,9 @@ const userUpdate = async (req, res, next) => {
   try {
     // taking userid from params for dynamic
     const { userId } = req.params;
-    // const userId = req.user.id;
-    // console.log(userId);
+    // const userId = req.user.id; 
     
-    // const { password } = req.body;
+    const { oldPassword } = req.body;
 
     if (!userId) {
       return next(new ApiError(400, "userId is required!..."));
@@ -173,15 +172,15 @@ const userUpdate = async (req, res, next) => {
       return next(new ApiError(400, "User not found..."));
     }
 
-    // if (!password) {
-    //   return next(
-    //     new ApiError(401, "Password is Required for verification...")
-    //   );
-    // }
-    // const isMatch = await bcrypt.compare(password, existingUser.password);
-    // if (!isMatch) {
-    //   return next(new ApiError(401, "Invalid Password..."));
-    // }
+    if (!oldPassword) {
+      return next(
+        new ApiError(401, "Password is Required for verification...")
+      );
+    }
+    const isMatch = await bcrypt.compare(oldPassword, existingUser.password);
+    if (!isMatch) {
+      return next(new ApiError(401, "Invalid Password..."));
+    }
 
     // update fields
     const updateFields = {};

@@ -158,11 +158,12 @@ const userLogin = async (req, res, next) => {
 // update userDetails put
 const userUpdate = async (req, res, next) => {
   try {
-    // const { userId } = req.params;
-    const userId = req.user.id;
+    // taking userid from params for dynamic
+    const { userId } = req.params;
+    // const userId = req.user.id;
     // console.log(userId);
     
-    const { password } = req.body;
+    // const { password } = req.body;
 
     if (!userId) {
       return next(new ApiError(400, "userId is required!..."));
@@ -172,22 +173,22 @@ const userUpdate = async (req, res, next) => {
       return next(new ApiError(400, "User not found..."));
     }
 
-    if (!password) {
-      return next(
-        new ApiError(401, "Password is Required for verification...")
-      );
-    }
-
-    const isMatch = await bcrypt.compare(password, existingUser.password);
-    if (!isMatch) {
-      return next(new ApiError(401, "Invalid Password..."));
-    }
+    // if (!password) {
+    //   return next(
+    //     new ApiError(401, "Password is Required for verification...")
+    //   );
+    // }
+    // const isMatch = await bcrypt.compare(password, existingUser.password);
+    // if (!isMatch) {
+    //   return next(new ApiError(401, "Invalid Password..."));
+    // }
 
     // update fields
     const updateFields = {};
     const allowedFields = [
       "userName",
       "mobileNo",
+      "password",
       "userRole",
       "isActive",
       "isAllowProduct",
@@ -230,6 +231,16 @@ const userUpdate = async (req, res, next) => {
         }
       }
     });
+
+    // hash password
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt(10);
+      updateFields.password = await bcrypt.hash(req.body.password, salt);
+    }
+
+    if (req.body.email) {
+     return next(new ApiError(400, "You can not change the email", [], error.stack));
+    }
 
     const update = await UserDetail.findByIdAndUpdate(userId,updateFields,{
         new:true,

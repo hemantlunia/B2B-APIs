@@ -1,8 +1,6 @@
-import req from "express/lib/request.js";
 import District from "../models/district.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import res from "express/lib/response.js";
 
 // add district
 const addDistrict = async (req, res, next) => {

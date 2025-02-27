@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// user registration... post
+// user registration...
 const userRegister = async (req, res, next) => {
   try {
     const { userName, email, mobileNo, password, userRole } = req.body;
@@ -138,17 +138,18 @@ const userLogin = async (req, res, next) => {
 
     // generate the token
     const token = await jwt.sign(
-      { id: existUser._id },
+      {
+        id: existUser._id,
+        email: existUser.email,
+        isActive: existUser.isActive,
+        userRole: existUser.userRole,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
     return res.json(
-      new ApiResponse(
-        200,
-        { token, user: existUser },
-        "Login Successful..."
-      )
+      new ApiResponse(200, { token, user: existUser }, "Login Successful...")
     );
   } catch (error) {
     next(new ApiError(500, "Server Error", [error.message], error.stack));
@@ -160,13 +161,15 @@ const userUpdate = async (req, res, next) => {
   try {
     // taking userid from params for dynamic
     const { userId } = req.params;
-    // const userId = req.user.id; 
-    
+
+    // *****Need to check again update field
+    // const userId = req.user.id;
+
     const { oldPassword } = req.body;
 
     if (!userId) {
       return next(new ApiError(400, "userId is required!..."));
-    };
+    }
     const existingUser = await UserDetail.findById(userId);
     if (!existingUser) {
       return next(new ApiError(400, "User not found..."));
@@ -238,16 +241,18 @@ const userUpdate = async (req, res, next) => {
     }
 
     if (req.body.email) {
-     return next(new ApiError(400, "You can not change the email", [], error.stack));
+      return next(
+        new ApiError(400, "You can not change the email", [], error.stack)
+      );
     }
 
-    const update = await UserDetail.findByIdAndUpdate(userId,updateFields,{
-        new:true,
-        runValidators:true,
+    const update = await UserDetail.findByIdAndUpdate(userId, updateFields, {
+      new: true,
+      runValidators: true,
     });
 
     return res.json(
-        new ApiResponse(200,update,"User updated successfully...")
+      new ApiResponse(200, update, "User updated successfully...")
     );
   } catch (error) {
     next(new ApiError(500, "Server Error", [error.message], error.stack));
@@ -255,19 +260,40 @@ const userUpdate = async (req, res, next) => {
 };
 
 // all user Get
-const allUserGet = async(req,res,next)=>{
+const allUserGet = async (req, res, next) => {
   // try
   try {
     const all = await UserDetail.find();
-    return res.json(
-      new ApiResponse(200,all,"user fetched successfully...")
-  );
+    return res.json(new ApiResponse(200, all, "user fetched successfully..."));
   } catch (error) {
     next(new ApiError(500, "Server Error", [error.message], error.stack));
-
   }
-  
-}
-export { userRegister, userLogin, userUpdate,allUserGet };
+};
 
+// Block user
+const userBlock = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const isAdmin = req.user.userRole;
+    if (isAdmin !== "Admin") {
+      return next(new ApiError(400, "Only Admin can Block..."));
+    }
+    const user = await UserDetail.findByIdAndUpdate(
+      { _id: userId },
+      {
+        $set: {
+          isActive: false,
+        },
+      },{new:true}
+    ).select("-password");
 
+    if (user) {
+      return res.json(
+        new ApiResponse(200, user, "User blocked successfully...")
+      );
+    }
+  } catch (error) {
+    next(new ApiError(500, "Server Error while blocking the user..."));
+  }
+};
+export { userRegister, userLogin, userUpdate, allUserGet, userBlock };
